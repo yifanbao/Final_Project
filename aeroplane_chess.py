@@ -31,6 +31,7 @@ class Plane:
 
     @staticmethod
     def clear_board():
+        # TODO: clear player?
         for color in COLOR:
             while len(Plane.__all_pieces[color]):
                 piece = Plane.__all_pieces[color].pop(0)
@@ -43,10 +44,20 @@ class Plane:
             raise ValueError('Cannot update location color!')
 
     def standby(self):
+        """
+
+        :return:
+        >>> p = Plane('red')
+        >>> print(p.color, p.location)
+        red hangar
+        >>> p.standby()
+        Hangar -> Standby
+        """
         if self.location != 'hangar':
             raise ValueError('Plane have entered in!')
         else:
             self.location = 'standby'
+            print('Hangar -> Standby')
 
     def move(self, distance: int, enable_jump=True):
         # Move the plane
@@ -74,10 +85,13 @@ class Plane:
 
 class Player:
 
+    __all_players = []
+
     def __init__(self, color):
         self.color = color
         self.moving_planes = []
         self.settled_planes = []
+        Player.__all_players.append(self)
         self.setup_planes()
 
     @staticmethod
@@ -124,3 +138,8 @@ class Player:
                 selected_plane = random.choice(available_planes)
                 selected_plane.move(dice)
 
+
+if __name__ == '__main__':
+    Player.setup_players()
+
+    print()
