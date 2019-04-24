@@ -12,10 +12,7 @@ COLOR = ['red', 'yellow', 'blue', 'green']
 
 class Plane:
 
-    __all_pieces = {'red': [],
-                    'yellow': [],
-                    'blue': [],
-                    'green': []}
+    __all_pieces = []
 
     __entering_location = {'red': 39,
                            'yellow': 0,
@@ -27,14 +24,13 @@ class Plane:
         self.location = location
         self.location_color = color
         self.distance_travelled = 0
-        Plane.__all_pieces[color].append(self)
+        Plane.__all_pieces.append(self)
 
     @staticmethod
     def clear_board():
-        for color in COLOR:
-            while len(Plane.__all_pieces[color]):
-                piece = Plane.__all_pieces[color].pop(0)
-                del piece
+        while len(Plane.__all_pieces):
+            piece = Plane.__all_pieces.pop(0)
+            del piece
 
     def update_location(self):
         if self.location == 'hangar':
@@ -75,7 +71,8 @@ class Plane:
         self.update_location()
 
         # When landing on an opponent's piece, send back that piece to its hangar
-        # TODO: get_plane_at(self.location), send_back()
+        if isinstance(self.location, int):
+            Plane.send_back_plane_at(self.location)
 
         # When landing on the entrance of the plane color's shortcut, jump to the exit
         if self.distance_travelled == 18:
@@ -84,6 +81,12 @@ class Plane:
             # When landing on a space of the plane's own color, jump to the next space of that color
             if self.color == self.location_color:
                 self.move(4, False)
+
+    @staticmethod
+    def send_back_plane_at(location):
+        for plane in Plane.__all_pieces:
+            if plane.location == location:
+                plane.send_back()
 
     def send_back(self):
         self.location = 'hangar'
