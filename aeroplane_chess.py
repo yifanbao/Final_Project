@@ -19,8 +19,9 @@ class Plane:
                            'blue': 13,
                            'green': 26}
 
-    def __init__(self, color, location='hangar'):
+    def __init__(self, color, no, location='hangar'):
         self.color = color
+        self.no = no
         self.location = location
         self.location_color = color
         self.distance_travelled = 0
@@ -33,6 +34,7 @@ class Plane:
             del piece
 
     def update_location(self):
+        previous_location = self.location
         if self.location == 'hangar':
             self.location = 'standby'
         elif self.location == 'standby' or isinstance(self.location, int):
@@ -45,8 +47,13 @@ class Plane:
                 self.location_color = self.color
             else:  # arrived in the center
                 self.location = 'settled'
+        elif self.location == 'home zone':
+            if self.distance_travelled >= 56:
+                self.location = 'settled'
         elif self.location == 'settled':
             raise ValueError('Should not update the location of a settled plane!')
+
+        print('Plane {}: {} -> {} {}'.format(self.no, previous_location, self.location, self.location_color))
 
     def standby(self):
         """
@@ -70,22 +77,21 @@ class Plane:
         self.distance_travelled += distance
         self.update_location()
 
-        # When landing on an opponent's piece, send back that piece to its hangar
         if isinstance(self.location, int):
-            Plane.send_back_plane_at(self.location)
+            # When landing on an opponent's piece, send back that piece to its hangar
+            self.send_back_plane_against()
 
-        # When landing on the entrance of the plane color's shortcut, jump to the exit
-        if self.distance_travelled == 18:
-            self.move(12, False)
-        elif enable_jump:
-            # When landing on a space of the plane's own color, jump to the next space of that color
-            if self.color == self.location_color:
-                self.move(4, False)
+            # When landing on the entrance of the plane color's shortcut, jump to the exit
+            if self.distance_travelled == 18:
+                self.move(12, False)
+            elif enable_jump:
+                # When landing on a space of the plane's own color, jump to the next space of that color
+                if self.color == self.location_color:
+                    self.move(4, False)
 
-    @staticmethod
-    def send_back_plane_at(location):
+    def send_back_plane_against(self):
         for plane in Plane.__all_pieces:
-            if plane.location == location:
+            if plane.location == self.location and plane.color != self.color:
                 plane.send_back()
 
     def send_back(self):
@@ -96,33 +102,37 @@ class Plane:
 
 class Player:
 
-    __all_players = []
+    players = []
 
-    def __init__(self, color):
+    def __init__(self, color, name):
         self.color = color
+        self.name = name
         self.moving_planes = []
         self.settled_planes = []
-        Player.__all_players.append(self)
+        Player.players.append(self)
         self.setup_planes()
 
     # TODO: clear player?
 
     @staticmethod
     def setup_players(number=4):
-        for player_no in range(number):
-            Player(COLOR[player_no])
-        # TODO: check the number of players (should be 2-4)
+        if not 2 <= number <= 4:
+            raise ValueError('Only 2-4 players are allowed!')
+        else:
+            for n in range(number):
+                Player(COLOR[n], COLOR[n].capitalize())
 
     def setup_planes(self):
-        p1 = Plane(self.color)
-        p2 = Plane(self.color)
-        p3 = Plane(self.color)
-        p4 = Plane(self.color)
+        p1 = Plane(self.color, 'p1')
+        p2 = Plane(self.color, 'p2')
+        p3 = Plane(self.color, 'p3')
+        p4 = Plane(self.color, 'p4')
         self.moving_planes = [p1, p2, p3, p4]
 
     def move_plane(self):
         # Roll the dice
         dice = random.randint(1, 6)
+        print('Player: {}  Dice: {}'.format(self.name, dice))
 
         # Get a list of all planes that are available to move or standby,
         # and select one from them to move
@@ -140,8 +150,11 @@ class Player:
                 available_planes = self.moving_planes
                 selected_plane = random.choice(available_planes)
                 selected_plane.move(6)
+                if selected_plane.location == 'settled':
+                    self.settle(selected_plane.no)
             # Get another roll after rolling a 6
-            self.move_plane()
+            if not self.is_winner():
+                self.move_plane()
         else:
             # A roll of 1-5, move a plane in the track
             for plane in self.moving_planes:
@@ -150,9 +163,35 @@ class Player:
             if len(available_planes):
                 selected_plane = random.choice(available_planes)
                 selected_plane.move(dice)
+                if selected_plane.location == 'settled':
+                    self.settle(selected_plane.no)
+
+    def settle(self, p_no):
+        for idx in range(len(self.moving_planes)):
+            if self.moving_planes[idx].no == p_no:
+                settled_plane = self.moving_planes.pop(idx)
+                self.settled_planes.append(settled_plane)
+                break
+
+    def is_winner(self):
+        if len(self.moving_planes):
+            return None
+        else:
+            return self.name
 
 
 if __name__ == '__main__':
-    Player.setup_players()
+    number_of_players = 2
+    Player.setup_players(number_of_players)
+    winner = None
+    while not winner:
+        for player_no in range(number_of_players):
+            current_player = Player.players[player_no]
+            current_player.move_plane()
+            winner = current_player.is_winner()
+            if winner:
+                break
+
+    print('The winner of this round is', winner)
 
     print()
