@@ -112,7 +112,11 @@ class Player:
         Player.players.append(self)
         self.setup_planes()
 
-    # TODO: clear player?
+    @staticmethod
+    def clear_player():
+        while len(Player.players):
+            player = Player.players.pop(0)
+            del player
 
     @staticmethod
     def setup_players(number=4):
@@ -181,17 +185,25 @@ class Player:
 
 
 if __name__ == '__main__':
-    number_of_players = 2
-    Player.setup_players(number_of_players)
-    winner = None
-    while not winner:
-        for player_no in range(number_of_players):
-            current_player = Player.players[player_no]
-            current_player.move_plane()
-            winner = current_player.is_winner()
-            if winner:
-                break
+    number_of_players = 4
+    count_of_wins = {'Red': 0,
+                     'Yellow': 0,
+                     'Blue': 0,
+                     'Green': 0}
+    for i in range(1):
+        Player.setup_players(number_of_players)
+        winner = None
+        while not winner:
+            for player_no in range(number_of_players):
+                current_player = Player.players[player_no]
+                current_player.move_plane()
+                winner = current_player.is_winner()
+                if winner:
+                    break
+        print('The winner of this round is', winner)
+        count_of_wins[winner] += 1
+        Player.clear_player()
 
-    print('The winner of this round is', winner)
-
+    print('\nRed:{}  Yellow:{}  Blue:{}  Green:{}'.format(count_of_wins['Red'], count_of_wins['Yellow'],
+                                                        count_of_wins['Blue'], count_of_wins['Green']))
     print()
