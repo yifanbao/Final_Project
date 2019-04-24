@@ -31,11 +31,20 @@ class Plane:
 
     @staticmethod
     def clear_board():
-        # TODO: clear player?
         for color in COLOR:
             while len(Plane.__all_pieces[color]):
                 piece = Plane.__all_pieces[color].pop(0)
                 del piece
+
+    def update_location(self):
+        if self.location == 'hangar':
+            self.location = 'standby'
+        elif self.location == 'standby':
+            entering_location = Plane.__entering_location[self.color]
+            self.location = entering_location + self.distance_travelled
+            # TODO: update for planes in the track
+        elif self.location == 'settled':
+            raise ValueError('Cannot update the location of a settled plane!')
 
     def update_location_color(self):
         if isinstance(self.location, int):
@@ -93,6 +102,8 @@ class Player:
         self.settled_planes = []
         Player.__all_players.append(self)
         self.setup_planes()
+
+    # TODO: clear player?
 
     @staticmethod
     def setup_players(number=4):
