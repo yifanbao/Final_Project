@@ -61,11 +61,10 @@ class Plane:
         """
 
         :return:
-        >>> p = Plane('red')
+        >>> p = Plane('red', 'p')
         >>> print(p.color, p.location)
         red hangar
         >>> p.standby()
-        Hangar -> Standby
         """
         # TODO: use update_location instead?
         if self.location != 'hangar':
@@ -101,16 +100,26 @@ class Plane:
         self.location_color = self.color
         self.distance_travelled = 0
 
+    def has_opponents_behind(self, distance=6):
+        if isinstance(self.location, int):
+            for plane in Plane.__all_pieces:
+                if isinstance(plane.location, int):
+                    if 0 < self.location - plane.location <= distance \
+                            or 0 < self.location - plane.location + 52 <= distance:
+                        return True
+        return False
+
 
 class Player:
 
     players = []
 
-    def __init__(self, color, name):
+    def __init__(self, color, name, avoid_opponents=False):
         self.color = color
         self.name = name
         self.moving_planes = []
         self.settled_planes = []
+        self.avoid_opponents = avoid_opponents
         Player.players.append(self)
         self.setup_planes()
 
@@ -125,8 +134,9 @@ class Player:
         if not 2 <= number <= 4:
             raise ValueError('Only 2-4 players are allowed!')
         else:
-            for n in range(number):
+            for n in range(number - 1):
                 Player(COLOR[n], COLOR[n].capitalize())
+            Player('green', 'Green', True)
 
     def setup_planes(self):
         p1 = Plane(self.color, 'p1')
@@ -142,19 +152,30 @@ class Player:
 
         # Get a list of all planes that are available to move or standby,
         # and select one from them to move
+        awaiting_planes = []
         available_planes = []
+        dangerous_planes = []
         if dice == 6:
-            # If there are planes in the hangar, get one of them standby
+            # If there are planes waiting in the hangar, get one of them standby
             for plane in self.moving_planes:
                 if plane.location == 'hangar':
-                    available_planes.append(plane)
-            if len(available_planes):
-                selected_plane = random.choice(available_planes)
+                    awaiting_planes.append(plane)
+            if len(awaiting_planes):
+                selected_plane = random.choice(awaiting_planes)
                 selected_plane.standby()
             # If not, move one of the planes in the track
             else:
                 available_planes = self.moving_planes
-                selected_plane = random.choice(available_planes)
+                if not self.avoid_opponents:
+                    selected_plane = random.choice(available_planes)
+                else:
+                    for plane in available_planes:
+                        if plane.has_opponents_behind():
+                            dangerous_planes.append(plane)
+                    if len(dangerous_planes):
+                        selected_plane = random.choice(dangerous_planes)
+                    else:
+                        selected_plane = random.choice(available_planes)
                 selected_plane.move(6)
                 if selected_plane.location == 'settled':
                     self.settle(selected_plane.no)
@@ -167,7 +188,16 @@ class Player:
                 if plane.location != 'hangar':
                     available_planes.append(plane)
             if len(available_planes):
-                selected_plane = random.choice(available_planes)
+                if not self.avoid_opponents:
+                    selected_plane = random.choice(available_planes)
+                else:
+                    for plane in available_planes:
+                        if plane.has_opponents_behind():
+                            dangerous_planes.append(plane)
+                    if len(dangerous_planes):
+                        selected_plane = random.choice(dangerous_planes)
+                    else:
+                        selected_plane = random.choice(available_planes)
                 selected_plane.move(dice)
                 if selected_plane.location == 'settled':
                     self.settle(selected_plane.no)
@@ -192,7 +222,7 @@ if __name__ == '__main__':
                      'Yellow': 0,
                      'Blue': 0,
                      'Green': 0}
-    for i in range(100):
+    for i in range(200):
         Player.setup_players(number_of_players)
         winner = None
         while winner is None:
