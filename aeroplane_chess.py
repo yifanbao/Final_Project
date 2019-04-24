@@ -100,7 +100,7 @@ class Plane:
         """
 
         :return:
-        >>> p = Plane('red', 'p1')
+        >>> p = Plane('red', 'p')
         >>> print(p.color, p.location)
         red hangar
         >>> p.standby()
