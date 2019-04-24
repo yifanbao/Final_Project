@@ -34,6 +34,45 @@ class Plane:
             del piece
 
     def update_location(self):
+        """
+
+        :return:
+        >>> p1 = Plane('red', 'p1')
+        >>> p1.update_location()
+        >>> print(p1.location, p1.location_color)
+        standby red
+        >>> p2 = Plane('yellow', 'p2', 45)
+        >>> p2.distance_travelled = 49
+        >>> p2.update_location()
+        >>> print(p2.location, p2.location_color)
+        49 red
+        >>> p3 = Plane('blue', 'p3', 'standby')
+        >>> p3.distance_travelled = 5
+        >>> p3.update_location()
+        >>> print(p3.location, p3.location_color)
+        18 yellow
+        >>> p4 = Plane('green', 'p4', 50)
+        >>> p4.distance_travelled = 54
+        >>> p4.update_location()
+        >>> print(p4.location, p4.location_color)
+        home zone green
+        >>> p5 = Plane('red', 'p5', 52)
+        >>> p5.distance_travelled = 56
+        >>> p5.update_location()
+        >>> print(p5.location, p5.location_color)
+        settled red
+        >>> p6 = Plane('blue','p6', 'settled')
+        >>> p6.distance_travelled = 3
+        >>> p6.update_location()
+        Traceback (most recent call last):
+    File "D:\Program File\PyCharm 2018.3.3\helpers\pycharm\docrunner.py", line 140, in __run
+        compileflags, 1), test.globs)
+    File "<doctest update_location[21]>", line 1, in <module>
+        p6.update_location()
+    File "E:/UIUC12/IS590PR/final/finalcode/aeroplane_chess.py", line 91, in update_location
+        raise ValueError('Should not update the location of a settled plane!')
+    ValueError: Should not update the location of a settled plane!
+        """
         previous_location = self.location
         if self.location == 'hangar':
             self.location = 'standby'
@@ -61,11 +100,12 @@ class Plane:
         """
 
         :return:
-        >>> p = Plane('red')
+        >>> p = Plane('red', 'p1')
         >>> print(p.color, p.location)
         red hangar
         >>> p.standby()
-        Hangar -> Standby
+        >>> print(p.location)
+        standby
         """
         # TODO: use update_location instead?
         if self.location != 'hangar':
@@ -75,6 +115,27 @@ class Plane:
             # print('Plane {}: {} -> {}'.format(self.no, 'hangar', 'standby'))
 
     def move(self, distance: int, enable_jump=True):
+        """
+
+        :param distance:
+        :param enable_jump:
+        :return:
+        >>> p1 = Plane('yellow', 'p1', 'standby')
+        >>> p2 = Plane('red', 'p2', 4)
+        >>> p1.move(4, True)
+        >>> print(p1.location, p2.location)
+        4 hangar
+        >>> p3 = Plane('red', 'p3', 1)
+        >>> p3.distance_travelled = 14
+        >>> p3.move(4, True)
+        >>> print(p3.location)
+        17
+        >>> p4 = Plane('yellow', 'p4', 12)
+        >>> p4.distance_travelled = 12
+        >>> p4.move(2, True)
+        >>> print(p4.location)
+        30
+        """
         # Move the plane
         self.distance_travelled += distance
         self.update_location()
