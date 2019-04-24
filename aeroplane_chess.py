@@ -41,6 +41,8 @@ class Plane:
             if self.distance_travelled <= 50:  # still in the track
                 entering_location = Plane.__entering_location[self.color]
                 self.location = entering_location + self.distance_travelled
+                if self.location > 52:
+                    self.location -= 52
                 self.location_color = COLOR[self.location % 4 - 1]
             elif self.distance_travelled <= 55:  # entering into home zone
                 self.location = 'home zone'
@@ -53,7 +55,7 @@ class Plane:
         elif self.location == 'settled':
             raise ValueError('Should not update the location of a settled plane!')
 
-        print('Plane {}: {} -> {} {}'.format(self.no, previous_location, self.location, self.location_color))
+        # print('Plane {}: {} -> {} {}'.format(self.no, previous_location, self.location, self.location_color))
 
     def standby(self):
         """
@@ -70,7 +72,7 @@ class Plane:
             raise ValueError('Plane have entered in!')
         else:
             self.location = 'standby'
-            print('Hangar -> Standby')
+            # print('Plane {}: {} -> {}'.format(self.no, 'hangar', 'standby'))
 
     def move(self, distance: int, enable_jump=True):
         # Move the plane
@@ -136,7 +138,7 @@ class Player:
     def move_plane(self):
         # Roll the dice
         dice = random.randint(1, 6)
-        print('Player: {}  Dice: {}'.format(self.name, dice))
+        # print('Player: {}  Dice: {}'.format(self.name, dice))
 
         # Get a list of all planes that are available to move or standby,
         # and select one from them to move
@@ -190,15 +192,15 @@ if __name__ == '__main__':
                      'Yellow': 0,
                      'Blue': 0,
                      'Green': 0}
-    for i in range(1):
+    for i in range(100):
         Player.setup_players(number_of_players)
         winner = None
-        while not winner:
+        while winner is None:
             for player_no in range(number_of_players):
                 current_player = Player.players[player_no]
                 current_player.move_plane()
                 winner = current_player.is_winner()
-                if winner:
+                if winner is not None:
                     break
         print('The winner of this round is', winner)
         count_of_wins[winner] += 1
@@ -206,4 +208,5 @@ if __name__ == '__main__':
 
     print('\nRed:{}  Yellow:{}  Blue:{}  Green:{}'.format(count_of_wins['Red'], count_of_wins['Yellow'],
                                                         count_of_wins['Blue'], count_of_wins['Green']))
+
     print()
