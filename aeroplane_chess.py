@@ -39,18 +39,18 @@ class Plane:
     def update_location(self):
         if self.location == 'hangar':
             self.location = 'standby'
-        elif self.location == 'standby':
-            entering_location = Plane.__entering_location[self.color]
-            self.location = entering_location + self.distance_travelled
-            # TODO: update for planes in the track
+        elif self.location == 'standby' or isinstance(self.location, int):
+            if self.distance_travelled <= 50:  # still in the track
+                entering_location = Plane.__entering_location[self.color]
+                self.location = entering_location + self.distance_travelled
+                self.location_color = COLOR[self.location % 4 - 1]
+            elif self.distance_travelled <= 55:  # entering into home zone
+                self.location = 'home zone'
+                self.location_color = self.color
+            else:  # arrived in the center
+                self.location = 'settled'
         elif self.location == 'settled':
-            raise ValueError('Cannot update the location of a settled plane!')
-
-    def update_location_color(self):
-        if isinstance(self.location, int):
-            self.location_color = COLOR[self.location % 4 - 1]
-        else:
-            raise ValueError('Cannot update location color!')
+            raise ValueError('Should not update the location of a settled plane!')
 
     def standby(self):
         """
@@ -62,6 +62,7 @@ class Plane:
         >>> p.standby()
         Hangar -> Standby
         """
+        # TODO: use update_location instead?
         if self.location != 'hangar':
             raise ValueError('Plane have entered in!')
         else:
@@ -71,9 +72,7 @@ class Plane:
     def move(self, distance: int, enable_jump=True):
         # Move the plane
         self.distance_travelled += distance
-        # TODO: update location, consider standby
-        # TODO: enter into home zone
-        self.update_location_color()
+        self.update_location()
 
         # When landing on an opponent's piece, send back that piece to its hangar
         # TODO: get_plane_at(self.location), send_back()
