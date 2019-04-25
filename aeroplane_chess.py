@@ -109,17 +109,26 @@ class Plane:
                         return True
         return False
 
+    def can_stack_after(self, distance):
+        if isinstance(self.location, int):  # TODO: and standby
+            for plane in Plane.__all_pieces:
+                if isinstance(plane.location, int):
+                    if self.location + distance == plane.location and self.color == plane.color:
+                        return True
+        return False
+
 
 class Player:
 
     players = []
 
-    def __init__(self, color, name, avoid_opponents=False):
+    def __init__(self, color, name, strategy=None, max_planes_on_track=4):
         self.color = color
         self.name = name
         self.moving_planes = []
         self.settled_planes = []
-        self.avoid_opponents = avoid_opponents
+        self.strategy = strategy
+        self.max_planes_on_track = max_planes_on_track
         Player.players.append(self)
         self.setup_planes()
 
@@ -136,7 +145,7 @@ class Player:
         else:
             for n in range(number - 1):
                 Player(COLOR[n], COLOR[n].capitalize())
-            Player('green', 'Green', True)
+            Player('green', 'Green', 'stack_planes_first')
 
     def setup_planes(self):
         p1 = Plane(self.color, 'p1')
@@ -154,7 +163,6 @@ class Player:
         # and select one from them to move
         awaiting_planes = []
         available_planes = []
-        dangerous_planes = []
         if dice == 6:
             # If there are planes waiting in the hangar, get one of them standby
             for plane in self.moving_planes:
@@ -166,16 +174,8 @@ class Player:
             # If not, move one of the planes in the track
             else:
                 available_planes = self.moving_planes
-                if not self.avoid_opponents:
-                    selected_plane = random.choice(available_planes)
-                else:
-                    for plane in available_planes:
-                        if plane.has_opponents_behind():
-                            dangerous_planes.append(plane)
-                    if len(dangerous_planes):
-                        selected_plane = random.choice(dangerous_planes)
-                    else:
-                        selected_plane = random.choice(available_planes)
+                selected_plane = self.select_plane_by_strategy(dice, available_planes)
+
                 selected_plane.move(6)
                 if selected_plane.location == 'settled':
                     self.settle(selected_plane.no)
@@ -188,19 +188,25 @@ class Player:
                 if plane.location != 'hangar':
                     available_planes.append(plane)
             if len(available_planes):
-                if not self.avoid_opponents:
-                    selected_plane = random.choice(available_planes)
-                else:
-                    for plane in available_planes:
-                        if plane.has_opponents_behind():
-                            dangerous_planes.append(plane)
-                    if len(dangerous_planes):
-                        selected_plane = random.choice(dangerous_planes)
-                    else:
-                        selected_plane = random.choice(available_planes)
+                selected_plane = self.select_plane_by_strategy(dice, available_planes)
                 selected_plane.move(dice)
                 if selected_plane.location == 'settled':
                     self.settle(selected_plane.no)
+
+    def select_plane_by_strategy(self, dice, available_planes):
+        if self.strategy == 'control_planes_on_track':
+            pass
+        elif self.strategy == 'stack_planes_first':
+            stackable_planes = []
+            for plane in available_planes:
+                if plane.can_stack_after(dice):
+                    stackable_planes.append(plane)
+            if len(stackable_planes):
+                return random.choice(stackable_planes)
+            else:
+                return random.choice(available_planes)
+        else:
+            return random.choice(available_planes)
 
     def settle(self, p_no):
         for idx in range(len(self.moving_planes)):
@@ -237,6 +243,6 @@ if __name__ == '__main__':
         Player.clear_player()
 
     print('\nRed:{}  Yellow:{}  Blue:{}  Green:{}'.format(count_of_wins['Red'], count_of_wins['Yellow'],
-                                                        count_of_wins['Blue'], count_of_wins['Green']))
+                                                          count_of_wins['Blue'], count_of_wins['Green']))
 
     print()
