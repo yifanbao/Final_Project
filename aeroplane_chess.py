@@ -140,7 +140,7 @@ class Player:
 
     players = []
 
-    def __init__(self, color, name, strategy=None, max_planes_on_track=4):
+    def __init__(self, color, name, strategy=None, max_planes_on_track=1):
         self.color = color
         self.name = name
         self.moving_planes = []
@@ -163,7 +163,8 @@ class Player:
         else:
             for n in range(number - 1):
                 Player(COLOR[n], COLOR[n].capitalize())
-            Player('green', 'Green', 'stack_planes_first')
+            # Player('green', 'Green', 'stack_planes_first')
+            Player('green', 'Green', 'control_planes_on_track')
 
     def setup_planes(self):
         p1 = Plane(self.color, 'p1')
@@ -221,7 +222,18 @@ class Player:
 
     def select_plane_by_strategy(self, dice, available_planes):
         if self.strategy == 'control_planes_on_track':
-            pass
+            on_track_planes = []
+            standby_planes = []
+            for plane in available_planes:
+                if isinstance(plane.location, int):
+                    on_track_planes.append(plane)
+                elif plane.location == 'standby':
+                    standby_planes.append(plane)
+            if len(on_track_planes) < self.max_planes_on_track and len(standby_planes):
+                return random.choice(standby_planes)
+            else:
+                return random.choice(available_planes)
+
         elif self.strategy == 'stack_planes_first':
             stackable_planes = []
             for plane in available_planes:
@@ -231,6 +243,7 @@ class Player:
                 return random.choice(stackable_planes)
             else:
                 return random.choice(available_planes)
+
         else:
             return random.choice(available_planes)
 
