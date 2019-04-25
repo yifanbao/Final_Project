@@ -74,6 +74,9 @@ class Plane:
             # print('Plane {}: {} -> {}'.format(self.no, 'hangar', 'standby'))
 
     def move(self, distance: int, enable_jump=True):
+        # Check if there are planes stacked
+        stacked_planes = self.get_planes_stacked()
+
         # Move the plane
         self.distance_travelled += distance
         self.update_location()
@@ -89,6 +92,13 @@ class Plane:
                 # When landing on a space of the plane's own color, jump to the next space of that color
                 if self.color == self.location_color:
                     self.move(4, False)
+
+        # Move planes in the same stack
+        if len(stacked_planes):
+            for plane in stacked_planes:
+                plane.distance_travelled = self.distance_travelled
+                plane.location = self.location
+                plane.location_color = self.location_color
 
     def send_back_plane_against(self):
         for plane in Plane.__all_pieces:
@@ -116,6 +126,14 @@ class Plane:
                     if self.location + distance == plane.location and self.color == plane.color:
                         return True
         return False
+
+    def get_planes_stacked(self):
+        stack = []
+        if self.distance_travelled > 0:
+            for plane in Plane.__all_pieces:
+                if self.distance_travelled == plane.distance_travelled and self.color == plane.color:
+                    stack.append(plane)
+        return stack
 
 
 class Player:
@@ -178,7 +196,11 @@ class Player:
 
                 selected_plane.move(6)
                 if selected_plane.location == 'settled':
+                    stacked_planes = selected_plane.get_planes_stacked()
                     self.settle(selected_plane.no)
+                    if len(stacked_planes):
+                        for plane in stacked_planes:
+                            self.settle(plane.no)
             # Get another roll after rolling a 6
             if not self.is_winner():
                 self.move_plane()
@@ -191,7 +213,11 @@ class Player:
                 selected_plane = self.select_plane_by_strategy(dice, available_planes)
                 selected_plane.move(dice)
                 if selected_plane.location == 'settled':
+                    stacked_planes = selected_plane.get_planes_stacked()
                     self.settle(selected_plane.no)
+                    if len(stacked_planes):
+                        for plane in stacked_planes:
+                            self.settle(plane.no)
 
     def select_plane_by_strategy(self, dice, available_planes):
         if self.strategy == 'control_planes_on_track':
@@ -213,6 +239,7 @@ class Player:
             if self.moving_planes[idx].no == p_no:
                 settled_plane = self.moving_planes.pop(idx)
                 self.settled_planes.append(settled_plane)
+                settled_plane.distance_travelled = -1
                 break
 
     def is_winner(self):
