@@ -450,9 +450,9 @@ class Player:
                 break
 
     def is_winner(self):
-        """
+        """ find whether the player is winner
 
-        :return:
+        :return: whether the player is winner
         >>> player1 = Player('red', 'Red')
         >>> player1.setup_planes()
         >>> player1.moving_planes[0].location = 'settled'
