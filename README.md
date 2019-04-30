@@ -2,8 +2,8 @@
 Monte Carlo Stimulation for Aeroplane Chess
 
 ## Team Member(s):
-Mingyan Gong: wrote parts of functions/test/doctest and analyzed the results
 Yifan Bao: Designed and wrote classes and functions/tests and comments/Output of the results/analysis
+Mingyan Gong: wrote parts of functions/test/doctest and analyzed the results
 
 # Monte Carlo Simulation Scenario & Purpose:
 Find the strategies for Aeroplane Chess game.
